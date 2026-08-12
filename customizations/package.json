@@ -1,0 +1,9 @@
+{
+  "name": "@adamdavislee/pi-customizations",
+  "private": true,
+  "type": "module",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"]
+  }
+}
