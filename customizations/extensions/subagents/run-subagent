@@ -1,0 +1,17 @@
+#!/bin/sh
+
+job_dir=$1
+completed_dir=$2
+pi_command=$3
+shift 3
+
+set +e
+"$pi_command" "$@" </dev/null >"$job_dir/events.jsonl" 2>"$job_dir/stderr.log"
+exit_code=$?
+set -e
+
+printf '%s\n' "$exit_code" >"$job_dir/exit-code.tmp"
+mv "$job_dir/exit-code.tmp" "$job_dir/exit-code"
+mv "$job_dir" "$completed_dir/$(basename "$job_dir")"
+
+exit "$exit_code"
