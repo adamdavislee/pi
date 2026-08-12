@@ -2627,6 +2627,11 @@ ctx.ui.addAutocompleteProvider((current) => ({
   },
 }));
 
+// Transcript display mode (interactive TUI only)
+const previousMode = ctx.ui.getDisplayMode();
+ctx.ui.setDisplayMode("verbose");  // Show thinking blocks and tool calls in the transcript and /tree
+ctx.ui.setDisplayMode(previousMode);
+
 // Tool output expansion
 const wasExpanded = ctx.ui.getToolsExpanded();
 ctx.ui.setToolsExpanded(true);

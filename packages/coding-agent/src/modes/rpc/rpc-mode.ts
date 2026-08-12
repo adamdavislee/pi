@@ -300,6 +300,14 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			return { success: false, error: "Theme switching not supported in RPC mode" };
 		},
 
+		getDisplayMode() {
+			return "quiet" as const;
+		},
+
+		setDisplayMode(_mode: "quiet" | "verbose") {
+			// Transcript display modes are not supported in RPC mode - no TUI
+		},
+
 		getToolsExpanded() {
 			// Tool expansion not supported in RPC mode - no TUI
 			return false;

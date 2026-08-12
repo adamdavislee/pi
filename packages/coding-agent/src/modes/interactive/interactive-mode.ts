@@ -445,6 +445,7 @@ export class InteractiveMode {
 
 	// Tool output expansion state
 	private toolOutputExpanded = false;
+	private displayMode: "quiet" | "verbose" = "quiet";
 
 	// Thinking block visibility state
 	private hideThinkingBlock = false;
@@ -2197,6 +2198,7 @@ export class InteractiveMode {
 			);
 		}
 		this.setHiddenThinkingLabel();
+		this.setDisplayMode("quiet");
 	}
 
 	// Maximum total widget lines to prevent viewport overflow
@@ -2396,6 +2398,8 @@ export class InteractiveMode {
 				}
 				return result;
 			},
+			getDisplayMode: () => this.displayMode,
+			setDisplayMode: (mode) => this.setDisplayMode(mode),
 			getToolsExpanded: () => this.toolOutputExpanded,
 			setToolsExpanded: (expanded) => this.setToolsExpanded(expanded),
 		};
@@ -3140,6 +3144,7 @@ export class InteractiveMode {
 						this.hiddenThinkingLabel,
 						this.outputPad,
 						this.getMarkdownTransformers(),
+						this.displayMode,
 					);
 					this.streamingMessage = event.message;
 					this.chatContainer.addChild(this.streamingComponent);
@@ -3169,6 +3174,7 @@ export class InteractiveMode {
 									this.sessionManager.getCwd(),
 								);
 								component.setExpanded(this.toolOutputExpanded);
+								component.setHidden(this.displayMode === "quiet");
 								this.chatContainer.addChild(component);
 								this.pendingTools.set(content.id, component);
 							} else {
@@ -3243,6 +3249,7 @@ export class InteractiveMode {
 						this.sessionManager.getCwd(),
 					);
 					component.setExpanded(this.toolOutputExpanded);
+					component.setHidden(this.displayMode === "quiet");
 					this.chatContainer.addChild(component);
 					this.pendingTools.set(event.toolCallId, component);
 				}
@@ -3549,6 +3556,7 @@ export class InteractiveMode {
 					this.hiddenThinkingLabel,
 					this.outputPad,
 					this.getMarkdownTransformers(),
+					this.displayMode,
 				);
 				this.chatContainer.addChild(assistantComponent);
 				break;
@@ -3606,6 +3614,7 @@ export class InteractiveMode {
 							this.sessionManager.getCwd(),
 						);
 						component.setExpanded(this.toolOutputExpanded);
+						component.setHidden(this.displayMode === "quiet");
 						this.chatContainer.addChild(component);
 
 						if (message.stopReason === "aborted" || message.stopReason === "error") {
@@ -4033,6 +4042,24 @@ export class InteractiveMode {
 
 	private toggleToolOutputExpansion(): void {
 		this.setToolsExpanded(!this.toolOutputExpanded);
+	}
+
+	private setDisplayMode(mode: "quiet" | "verbose"): void {
+		if (mode === this.displayMode) return;
+
+		this.displayMode = mode;
+		for (const child of this.chatContainer.children) {
+			if (child instanceof AssistantMessageComponent) {
+				child.setDisplayMode(mode);
+			} else if (child instanceof ToolExecutionComponent) {
+				child.setHidden(mode === "quiet");
+			}
+		}
+		this.streamingComponent?.setDisplayMode(mode);
+		for (const component of this.pendingTools.values()) {
+			component.setHidden(mode === "quiet");
+		}
+		this.ui.requestRender();
 	}
 
 	private setToolsExpanded(expanded: boolean): void {
@@ -5079,6 +5106,7 @@ export class InteractiveMode {
 				},
 				initialSelectedId,
 				initialFilterMode,
+				this.displayMode === "quiet",
 			);
 			selector.onCopy = async (text) => {
 				if (!text) {

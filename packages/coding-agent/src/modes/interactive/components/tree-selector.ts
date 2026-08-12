@@ -119,6 +119,7 @@ class TreeList implements Component {
 	private visibleChildrenMap: Map<string | null, string[]> = new Map();
 	private lastSelectedId: string | null = null;
 	private foldedNodes: Set<string> = new Set();
+	private quiet: boolean;
 
 	public onSelect?: (entryId: string) => void;
 	public onCancel?: () => void;
@@ -131,10 +132,12 @@ class TreeList implements Component {
 		maxVisibleLines: number,
 		initialSelectedId?: string,
 		initialFilterMode?: FilterMode,
+		quiet = false,
 	) {
 		this.currentLeafId = currentLeafId;
 		this.maxVisibleLines = maxVisibleLines;
 		this.filterMode = initialFilterMode ?? "default";
+		this.quiet = quiet;
 		this.multipleRoots = tree.length > 1;
 		this.flatNodes = this.flattenTree(tree);
 		this.buildActivePath();
@@ -340,13 +343,16 @@ class TreeList implements Component {
 			const entry = flatNode.node.entry;
 			const isCurrentLeaf = entry.id === this.currentLeafId;
 
-			// Skip assistant messages with only tool calls (no text) unless error/aborted
-			// Always show current leaf so active position is visible
-			if (entry.type === "message" && entry.message.role === "assistant" && !isCurrentLeaf) {
+			if (this.quiet && entry.type === "message" && entry.message.role === "toolResult") {
+				return false;
+			}
+
+			// Skip assistant messages without visible text unless error/aborted.
+			// Normally the current leaf stays visible to show the active position; quiet mode suppresses it too.
+			if (entry.type === "message" && entry.message.role === "assistant" && (this.quiet || !isCurrentLeaf)) {
 				const msg = entry.message as { stopReason?: string; content?: unknown };
 				const hasText = this.hasTextContent(msg.content);
 				const isErrorOrAborted = msg.stopReason && msg.stopReason !== "stop" && msg.stopReason !== "toolUse";
-				// Only hide if no text AND not an error/aborted message
 				if (!hasText && !isErrorOrAborted) {
 					return false;
 				}
@@ -1355,13 +1361,14 @@ export class TreeSelectorComponent extends Container implements Focusable {
 		onLabelChange?: (entryId: string, label: string | undefined) => void,
 		initialSelectedId?: string,
 		initialFilterMode?: FilterMode,
+		quiet = false,
 	) {
 		super();
 
 		this.onLabelChangeCallback = onLabelChange;
 		const maxVisibleLines = Math.max(5, Math.floor(terminalHeight / 2));
 
-		this.treeList = new TreeList(tree, currentLeafId, maxVisibleLines, initialSelectedId, initialFilterMode);
+		this.treeList = new TreeList(tree, currentLeafId, maxVisibleLines, initialSelectedId, initialFilterMode, quiet);
 		this.treeList.onSelect = onSelect;
 		this.treeList.onCancel = onCancel;
 		this.treeList.onCopy = (text) => this.onCopy?.(text);

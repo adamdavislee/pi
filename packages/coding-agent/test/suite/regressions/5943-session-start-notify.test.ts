@@ -39,6 +39,8 @@ function createUiContext(
 		getAllThemes: () => [],
 		getTheme: () => undefined,
 		setTheme: (_theme: string | Theme) => ({ success: false, error: "Theme switching not available in tests" }),
+		getDisplayMode: () => "quiet",
+		setDisplayMode: () => {},
 		getToolsExpanded: () => false,
 		setToolsExpanded: () => {},
 	};

@@ -39,6 +39,7 @@ export class ToolExecutionComponent extends Container {
 	};
 	private convertedImages: Map<number, { data: string; mimeType: string }> = new Map();
 	private hideComponent = false;
+	private hidden = false;
 
 	constructor(
 		toolName: string,
@@ -203,6 +204,10 @@ export class ToolExecutionComponent extends Container {
 		this.updateDisplay();
 	}
 
+	setHidden(hidden: boolean): void {
+		this.hidden = hidden;
+	}
+
 	setShowImages(show: boolean): void {
 		this.showImages = show;
 		this.updateDisplay();
@@ -219,7 +224,7 @@ export class ToolExecutionComponent extends Container {
 	}
 
 	override render(width: number): string[] {
-		if (this.hideComponent) {
+		if (this.hidden || this.hideComponent) {
 			return [];
 		}
 

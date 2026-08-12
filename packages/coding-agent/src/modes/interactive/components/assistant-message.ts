@@ -14,6 +14,7 @@ const OSC133_ZONE_FINAL = "\x1b]133;C\x07";
 export class AssistantMessageComponent extends Container {
 	private contentContainer: Container;
 	private hideThinkingBlock: boolean;
+	private displayMode: "quiet" | "verbose";
 	private markdownTheme: MarkdownTheme;
 	private hiddenThinkingLabel: string;
 	private outputPad: number;
@@ -29,6 +30,7 @@ export class AssistantMessageComponent extends Container {
 		hiddenThinkingLabel = "Thinking...",
 		outputPad = 1,
 		markdownTransformers: readonly MarkdownTransformer[] = [],
+		displayMode: "quiet" | "verbose" = "quiet",
 	) {
 		super();
 
@@ -37,6 +39,7 @@ export class AssistantMessageComponent extends Container {
 		this.hiddenThinkingLabel = hiddenThinkingLabel;
 		this.outputPad = outputPad;
 		this.markdownTransformers = markdownTransformers;
+		this.displayMode = displayMode;
 
 		// Container for text/thinking content
 		this.contentContainer = new Container();
@@ -56,6 +59,13 @@ export class AssistantMessageComponent extends Container {
 
 	setHideThinkingBlock(hide: boolean): void {
 		this.hideThinkingBlock = hide;
+		if (this.lastMessage) {
+			this.updateContent(this.lastMessage);
+		}
+	}
+
+	setDisplayMode(mode: "quiet" | "verbose"): void {
+		this.displayMode = mode;
 		if (this.lastMessage) {
 			this.updateContent(this.lastMessage);
 		}
@@ -94,7 +104,9 @@ export class AssistantMessageComponent extends Container {
 		this.contentContainer.clear();
 
 		const hasVisibleContent = message.content.some(
-			(c) => (c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim()),
+			(c) =>
+				(c.type === "text" && c.text.trim()) ||
+				(this.displayMode === "verbose" && c.type === "thinking" && c.thinking.trim()),
 		);
 
 		if (hasVisibleContent) {
@@ -126,7 +138,7 @@ export class AssistantMessageComponent extends Container {
 				}
 				i--;
 
-				if (thinkingBlocks.length === 0) {
+				if (thinkingBlocks.length === 0 || this.displayMode === "quiet") {
 					continue;
 				}
 

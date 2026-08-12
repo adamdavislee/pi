@@ -274,6 +274,12 @@ export interface ExtensionUIContext {
 	/** Set the current theme by name or Theme object. */
 	setTheme(theme: string | Theme): { success: boolean; error?: string };
 
+	/** Get the transcript display mode. */
+	getDisplayMode(): "quiet" | "verbose";
+
+	/** Set the transcript display mode. Quiet mode omits thinking blocks and tool calls from the transcript and tree. */
+	setDisplayMode(mode: "quiet" | "verbose"): void;
+
 	/** Get current tool output expansion state. */
 	getToolsExpanded(): boolean;
 

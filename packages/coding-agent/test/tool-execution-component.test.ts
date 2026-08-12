@@ -98,6 +98,24 @@ describe("ToolExecutionComponent parity", () => {
 		expect(component.render(120)).toEqual([]);
 	});
 
+	test("hidden tool rows take no layout space", () => {
+		const component = new ToolExecutionComponent(
+			"custom_tool",
+			"tool-hidden",
+			{},
+			{},
+			createBaseToolDefinition(),
+			createFakeTui(),
+			process.cwd(),
+		);
+
+		expect(component.render(120)).not.toEqual([]);
+		component.setHidden(true);
+		expect(component.render(120)).toEqual([]);
+		component.setHidden(false);
+		expect(component.render(120)).not.toEqual([]);
+	});
+
 	test("uses built-in rendering for built-in overrides without custom renderers", () => {
 		const overrideDefinition: ToolDefinition = {
 			...createBaseToolDefinition("edit"),

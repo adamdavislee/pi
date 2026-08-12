@@ -67,6 +67,7 @@ describe("AssistantMessageComponent", () => {
 			createAssistantMessage([{ type: "thinking", thinking: "private reasoning" }], { stopReason: "length" }),
 			true,
 		);
+		component.setDisplayMode("verbose");
 		const rendered = component.render(80).join("\n");
 
 		expect(rendered).toContain("Thinking...");
@@ -85,10 +86,33 @@ describe("AssistantMessageComponent", () => {
 			]),
 			true,
 		);
+		component.setDisplayMode("verbose");
 		const rendered = stripAnsi(component.render(80).join("\n"));
 
 		expect(rendered.match(/Thinking\.\.\./g)).toHaveLength(1);
 		expect(rendered).toContain("answer");
+	});
+
+	test("quiet mode omits thinking without a placeholder by default", () => {
+		initTheme("dark");
+
+		const component = new AssistantMessageComponent(
+			createAssistantMessage([
+				{ type: "thinking", thinking: "private reasoning" },
+				{ type: "text", text: "answer" },
+			]),
+			true,
+			undefined,
+			"Thinking...",
+			1,
+			[],
+			"quiet",
+		);
+		const rendered = stripAnsi(component.render(80).join("\n"));
+
+		expect(rendered).toContain("answer");
+		expect(rendered).not.toContain("private reasoning");
+		expect(rendered).not.toContain("Thinking...");
 	});
 
 	test("uses configured output padding for text and thinking", () => {
@@ -104,6 +128,7 @@ describe("AssistantMessageComponent", () => {
 			"Thinking...",
 			1,
 		);
+		component.setDisplayMode("verbose");
 		const lines = component.render(80).map((line) => stripAnsi(line));
 
 		expect(lines.some((line) => line.includes(" hello"))).toBe(true);
@@ -218,6 +243,7 @@ describe("AssistantMessageComponent", () => {
 			},
 		]);
 
+		component.setDisplayMode("verbose");
 		const rendered = stripAnsi(component.render(80).join("\n"));
 		expect(rendered).toContain("assistant:answer");
 		expect(rendered).toContain("assistant-thinking:reasoning");

@@ -85,6 +85,23 @@ function toolCallOnlyAssistant(id: string, parentId: string | null): SessionMess
 	};
 }
 
+function toolResult(id: string, parentId: string | null): SessionMessageEntry {
+	return {
+		type: "message",
+		id,
+		parentId,
+		timestamp: new Date().toISOString(),
+		message: {
+			role: "toolResult",
+			toolCallId: `tc-${parentId}`,
+			toolName: "read",
+			content: [{ type: "text", text: "tool output" }],
+			isError: false,
+			timestamp: Date.now(),
+		},
+	};
+}
+
 // Helper to create a model_change entry
 function modelChange(id: string, parentId: string | null): ModelChangeEntry {
 	return {
@@ -183,6 +200,33 @@ describe("TreeSelectorComponent", () => {
 
 			const list = selector.getTreeList();
 			expect(list.getSelectedNode()?.entry.id).toBe("user-2");
+		});
+	});
+
+	describe("quiet mode", () => {
+		test("hides tool calls and results even with the all filter", () => {
+			const entries = [
+				userMessage("user-1", null, "hello"),
+				toolCallOnlyAssistant("asst-tool", "user-1"),
+				toolResult("tool-result", "asst-tool"),
+			];
+			const selector = new TreeSelectorComponent(
+				buildTree(entries),
+				"tool-result",
+				24,
+				() => {},
+				() => {},
+				undefined,
+				undefined,
+				"all",
+				true,
+			);
+			const rendered = stripVTControlCharacters(selector.getTreeList().render(120).join("\n"));
+
+			expect(rendered).toContain("user: hello");
+			expect(rendered).not.toContain("read");
+			expect(rendered).not.toContain("tool output");
+			expect(rendered).not.toContain("(no content)");
 		});
 	});
 
